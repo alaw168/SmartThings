@@ -36,7 +36,8 @@
 		attribute "tamper", "enum", ["detected", "clear"]
 		fingerprint deviceId: "0x0701", inClusters: "0x5E,0x86,0x72,0x59,0x85,0x73,0x71,0x84,0x80,0x31,0x70,0x5A,0x98,0x7A"
 		}
-simulator {
+	
+	simulator {
 		status "no motion" : "command: 9881, payload: 00300300"
 		status "motion"    : "command: 9881, payload: 003003FF"
         status "clear" : " command: 9881, payload: 0071050000000007030000"
@@ -82,6 +83,7 @@ simulator {
 			).incomingMessage()
 		status "wake up": "command: 8407, payload:"
 	}
+	
 	tiles (scale: 2) {
 		multiAttributeTile(name:"main", type: "generic", width: 6, height: 4){
 			tileAttribute ("device.motion", key: "PRIMARY_CONTROL") {
@@ -99,13 +101,13 @@ simulator {
 					[value: 92, color: "#d04e00"],
 					[value: 98, color: "#bc2323"]
 				]
-			}
+		}
 		valueTile("humidity","device.humidity", width: 2, height: 2) {
            	state "humidity",label:'${currentValue}% humidity', unit:""
-			}
+		}
 		valueTile("illuminance","device.illuminance", width: 2, height: 2) {
-            	state "luminosity",label:'${currentValue}% light', unit:""
-			}
+            state "luminosity",label:'${currentValue}% light', unit:""
+		}
 		standardTile("acceleration", "device.acceleration", width: 2, height: 2) {
 			state("active", label:'tampered', icon:"st.contact.contact.open", backgroundColor:"#e86d13")
 			state("inactive", label:'ok', icon:"st.contact.contact.closed", backgroundColor:"#cccccc")
@@ -119,46 +121,47 @@ simulator {
 		main(["main"])
 		details(["main","temperature","humidity","illuminance","acceleration","battery","refresh"])
 	}
+	
     preferences {
 		input "debugOutput", "boolean", 
 			title: "Enable debug logging?",
 			defaultValue: false,
 			displayDuringSetup: true
-		input "LEDbehavior", "enum",
+		input "ledIndicator", "enum",
 			title: "LED indicator",
 			options: ["Off", "Temp (Pulse) + Motion (Flash)", "Temp (Flash) + Motion (Flash)", "Motion (Flash)"],
             defaultValue: "Quick Blink on Temp/PIR",
 			required: false,
 			displayDuringSetup: false
-		input "tempoffset", "number",
+		input "tempSensitivity", "number",
 			title: "Temperature Sensitivity",
             description: "Temperature change to be reported by sensor (in 0.1 degree increment) [1-50]",
             range: "1..50",
 			defaultValue: 10,
             required: false,
             displayDuringSetup: false
-		input "humidityoffset", "number",
+		input "humiditySensitivity", "number",
             title: "Humidity Sensitivity",
             description: "Humidity % change to be reported by sensor [1-50]",
 			range: "1..50",
 			defaultValue: 10,
 			required: false,
             displayDuringSetup: false
-		input "luminanceoffset", "number",
+		input "luminanceSensitivity", "number",
             title: "Light Sensitivity",
             description: "Light % change to be reported by sensor [5-50]",
             range: "5..50",
 			defaultValue: 10,
             required: false,
 	        displayDuringSetup: false
-		input "PIRsensitivity", "number",
-    	    title: "PIR sensor sensitivity",
+		input "motionSensitivity", "number",
+    	    title: "Motion Sensitivity",
 			description: "A value from 1 (high) to 7 (low)",
 			range: "1..7",
 			defaultValue: 3,
 			required: false,
 			displayDuringSetup: true
-		input "MotionReset", "number",
+		input "motionReset", "number",
     	    title: "PIR reset time",
 			description: "Motion sensor trigger interval in seconds [15-60]",
 			range: "15..60",
@@ -348,55 +351,27 @@ def configure() {
 	//	return []
 	//}
 	if (state.debug) log.debug "--Sending configuration commands to zooZ 4-in-1 sensor--"
-    //if (state.debug) log.debug "Prefernces settings: PIRsensitivity: $PIRsensitivity, Temp offset: $tempoffset, Humidity offset: $humidityoffset, Luminance offset: $luminanceoffset"
-	def LEDbehav = 4
-	if (LEDbehavior == "Off") {
-    	LEDbehav=1
-    }
-	else if (LEDbehavior == "Temp (Pulse) + Motion (Flash)") {
-    	LEDbehav=2
-	}
-	else if (LEDbehavior == "Temp (Flash) + Motion (Flash)") {
-    	LEDbehav=3
-	}
-	else {
-		LEDbehav=4
+	def ledIndicatorParam = 4
+	switch (ledIndicator) {
+		case "Off":
+	    	ledIndicatorParam = 1
+			break
+		case "Temp (Pulse) + Motion (Flash)":
+	    	ledIndicatorParam = 2
+			break
+		case "Temp (Flash) + Motion (Flash)":
+	    	ledIndicatorParam = 3
+			break
+		default:
+			ledIndicatorParam = 4
+			break
 	}	
-	def PIRsens = 3
-	if (PIRsensitivity) {
-		PIRsens=PIRsensitivity
-	}
-	else {
-		PIRsens = 3
-	}
-    def MotionRst = 15
-	if (MotionReset) {
-		MotionRst=MotionReset
-	}
-	else {
-		MotionRst = 15
-	}
-	def tempoff = 10
-	if (tempoffset) {
-		tempoff=tempoffset
-	}
-	else {
-		tempoff = 10
-	}
-	def humidityoff = 10
-	if (humidityoffset) {
-		humidityoff=humidityoffset
-	}
-	else {
-		humidityoff = 10
-	}
-	def luminanceoff = 10
-	if (luminanceoffset) {
-		luminanceoff=luminanceoffset
-	}
-	else {
-		luminanceoff = 10
-	}
+	def motionSensitivityParam = motionSensitivity ?: 3
+	def motionResetParam = motionResetParam ?: 15
+	def tempSensitivityParam = tempSensitivity ?: 10
+	def humiditySensitivityParam = humiditySensitivity ?: 10
+	def luminanceSensitivityParam = luminanceSensitivity ?: 10
+	
     if (state.debug) log.debug "settings: ${settings.inspect()}, state: ${state.inspect()}"
     setConfigured()
 	def request = [
@@ -407,30 +382,30 @@ def configure() {
         zwave.versionV1.versionGet(),
         zwave.firmwareUpdateMdV2.firmwareMdGet(),
 		
-        // configure temp scale to celcius or fahrenheight and set offset
+        // configure temp scale to celcius or fahrenheight and set sensitivity
 		zwave.configurationV1.configurationSet(parameterNumber: 0x01, size: 1, scaledConfigurationValue: 1),
 		zwave.configurationV1.configurationGet(parameterNumber: 0x01),
-		zwave.configurationV1.configurationSet(parameterNumber: 0x02, size: 1, scaledConfigurationValue: tempoff),		
+		zwave.configurationV1.configurationSet(parameterNumber: 0x02, size: 1, scaledConfigurationValue: tempSensitivityParam),		
 		zwave.configurationV1.configurationGet(parameterNumber: 0x02),
 		
-        // configure humidity offset
-		zwave.configurationV1.configurationSet(parameterNumber: 0x03, size: 1, scaledConfigurationValue: humidityoff),
+        // configure humidity sensitivity
+		zwave.configurationV1.configurationSet(parameterNumber: 0x03, size: 1, scaledConfigurationValue: humiditySensitivityParam),
 		zwave.configurationV1.configurationGet(parameterNumber: 0x03),
 		
-        // configure luminance offset
-		zwave.configurationV1.configurationSet(parameterNumber: 0x04, size: 1, scaledConfigurationValue: luminanceoff),
+        // configure luminance sensitivity
+		zwave.configurationV1.configurationSet(parameterNumber: 0x04, size: 1, scaledConfigurationValue: luminanceSensitivityParam),
 		zwave.configurationV1.configurationGet(parameterNumber: 0x04),
 		
-		// send no-motion report x minutes after motion stops
-		zwave.configurationV1.configurationSet(parameterNumber: 0x05, size: 1, scaledConfigurationValue: MotionRst),
+		// send motion report reset interval
+		zwave.configurationV1.configurationSet(parameterNumber: 0x05, size: 1, scaledConfigurationValue: motionResetParam),
 		zwave.configurationV1.configurationGet(parameterNumber: 0x05),
     	
 		// set motion sensor sensitivity
-        zwave.configurationV1.configurationSet(parameterNumber: 0x06, size: 1, scaledConfigurationValue: PIRsens),
+        zwave.configurationV1.configurationSet(parameterNumber: 0x06, size: 1, scaledConfigurationValue: motionSensitivityParam),
 		zwave.configurationV1.configurationGet(parameterNumber: 0x06),
 		
-        // set LED behavior
-        zwave.configurationV1.configurationSet(parameterNumber: 0x07, size: 1, scaledConfigurationValue: LEDbehav),
+        // set LED indicator behavior
+        zwave.configurationV1.configurationSet(parameterNumber: 0x07, size: 1, scaledConfigurationValue: ledIndicatorParam),
         zwave.configurationV1.configurationGet(parameterNumber: 0x07),
 		
 		// get updated battery and sensor data
