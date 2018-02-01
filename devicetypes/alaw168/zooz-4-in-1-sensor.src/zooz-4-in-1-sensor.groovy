@@ -125,44 +125,44 @@ simulator {
 			defaultValue: false,
 			displayDuringSetup: true
 		input "LEDbehavior", "enum",
-			title: "LED Behavior",
-			options: ["LED Off", "Breathing", "Quick Blink on Temp/PIR"],
+			title: "LED indicator",
+			options: ["Off", "Temp (Pulse) + Motion (Flash)", "Temp (Flash) + Motion (Flash)", "Motion (Flash)"],
             defaultValue: "Quick Blink on Temp/PIR",
 			required: false,
 			displayDuringSetup: false
 		input "tempoffset", "number",
-			title: "Reporting threshold  for temp",
-            description: "Enter a value 1-50 changing reporting threshold for temp. Represents 0.1 degree increments.",
+			title: "Temperature Sensitivity",
+            description: "Temperature change to be reported by sensor (in 0.1 degree increment) [1-50]",
             range: "1..50",
 			defaultValue: 10,
             required: false,
             displayDuringSetup: false
 		input "humidityoffset", "number",
-            title: "Reporting threshold for humidity",
-            description: "Report when change occurs from 1%-50% RH)",
+            title: "Humidity Sensitivity",
+            description: "Humidity % change to be reported by sensor [1-50]",
 			range: "1..50",
-			defaultValue: 5,
+			defaultValue: 10,
 			required: false,
             displayDuringSetup: false
 		input "luminanceoffset", "number",
-            title: "Reporting threshold for Luminance",
-            description: "valid values from 5% to 50%",
+            title: "Light Sensitivity",
+            description: "Light % change to be reported by sensor [5-50]",
             range: "5..50",
-			defaultValue: 5,
+			defaultValue: 10,
             required: false,
 	        displayDuringSetup: false
 		input "PIRsensitivity", "number",
-    	    title: "PIR motion sensitivity",
-			description: "A value from 1 (highest) to 7 (lowest)",
+    	    title: "PIR sensor sensitivity",
+			description: "A value from 1 (high) to 7 (low)",
 			range: "1..7",
-			defaultValue: 4,
+			defaultValue: 3,
 			required: false,
 			displayDuringSetup: true
 		input "MotionReset", "number",
     	    title: "PIR reset time",
-			description: "Number of minutes to wait to report motion cleared after a motion event if there is no motion detected.",
-			range: "1..255",
-			defaultValue: 5,
+			description: "Motion sensor trigger interval in seconds [15-60]",
+			range: "15..60",
+			defaultValue: 15,
 			required: false,
 			displayDuringSetup: true            
 	}
@@ -349,36 +349,39 @@ def configure() {
 	//}
 	if (state.debug) log.debug "--Sending configuration commands to zooZ 4-in-1 sensor--"
     //if (state.debug) log.debug "Prefernces settings: PIRsensitivity: $PIRsensitivity, Temp offset: $tempoffset, Humidity offset: $humidityoffset, Luminance offset: $luminanceoffset"
-	def LEDbehav = 3
-	if (LEDbehavior == "LED Off") {
+	def LEDbehav = 4
+	if (LEDbehavior == "Off") {
     	LEDbehav=1
     }
-	else if (LEDbehavior == "Breathing") {
+	else if (LEDbehavior == "Temp (Pulse) + Motion (Flash)") {
     	LEDbehav=2
 	}
+	else if (LEDbehavior == "Temp (Flash) + Motion (Flash)") {
+    	LEDbehav=3
+	}
 	else {
-		LEDbehav=3
+		LEDbehav=4
 	}	
-	def PIRsens = 4
+	def PIRsens = 3
 	if (PIRsensitivity) {
 		PIRsens=PIRsensitivity
 	}
 	else {
-		PIRsens = 4
+		PIRsens = 3
 	}
-    def MotionRst = 3
+    def MotionRst = 15
 	if (MotionReset) {
 		MotionRst=MotionReset
 	}
 	else {
-		MotionRst = 3
+		MotionRst = 15
 	}
-	def tempoff = 1
+	def tempoff = 10
 	if (tempoffset) {
 		tempoff=tempoffset
 	}
 	else {
-		tempoff = 1
+		tempoff = 10
 	}
 	def humidityoff = 10
 	if (humidityoffset) {
