@@ -868,18 +868,18 @@ private getAttrStatusText(attrName, eventMaps=null) {
 private getDescriptionText(data) {
 	switch (data?.name ?: "") {
 		case "motion":
-			return "${data.value}"
-			break
+            return (data.value == "active") ? "detected motion" : "motion has stopped"
+            break
 		case "temperature":
-			return "Temperature is ${data.value}°${data.unit}"					
+			return "temperature is ${data.value}°${data.unit}"					
 			break
 		case "humidity":
-			return  "Humidity is ${data.value}%"
+			return  "humidity is ${data.value}%"
 			break
 		case "lxLight":
-			return "Illuminance is ${data.value} lux"
+			return "illuminance is ${data.value} lux"
 		case "pLight":
-			return "Illuminance ${data.value}%"
+			return "illuminance ${data.value}%"
 			break
 		default:
 			return ""
