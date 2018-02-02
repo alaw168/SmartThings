@@ -33,8 +33,6 @@
 		
 		attribute "pendingChanges", "number"
 		
-		attribute "primaryStatus", "string"
-		attribute "secondaryStatus", "string"
 		attribute "pLight", "number"
 		attribute "lxLight", "number"
 		attribute "firmwareVersion", "string"
@@ -85,9 +83,9 @@
 		}
 
 		valueTile("pending", "device.pendingChanges", decoration: "flat", width: 2, height: 1){
-			state "pendingChanges", label:'${currentValue} Change(s) Pending'
-			state "0", label: ''
 			state "-1", label:'Updating Settings'
+			state "pendingChanges", label:'${currentValue} Change(s) Pending'
+			state "0", label: 'Up To Date'
 		}
 		
 		valueTile("lastUpdate", "device.lastUpdate", decoration: "flat", inactiveLabel:false, width: 2, height: 1){
@@ -103,28 +101,14 @@
 	}
 	
 	preferences {
-		input "primaryTileStatus", "enum",
-			title: "Primary Status:",
-			defaultValue: primaryTileStatusSetting,
-			required: false,
-			options: primaryStatusOptions
-
-		getBoolInput("roundPrimaryStatus", "Round the Primary Status to a whole number?", false)
-
-		input "secondaryTileStatus", "enum",
-			title: "Secondary Status:",
-			defaultValue: secondaryTileStatusSetting,
-			required: false,
-			options: secondaryStatusOptions		
-
 		getParamInput(tempScaleParam)
 		getParamInput(tempTriggerParam)
-		getNumberInput("tempOffset", "Temperature Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1°)\n(1 = Add 1°)", "-25..25", tempOffsetSetting)
+		getNumberInput("tempOffset", "Temperature Offset [-25 to 25]", "-25..25", tempOffsetSetting)
 		getParamInput(humidityTriggerParam)	
-		getNumberInput("humidityOffset", "Humidity % Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1%)\n(1 = Add 1%)", "-25..25", humidityOffsetSetting)
+		getNumberInput("humidityOffset", "Humidity % Offset [-25 to 25]", "-25..25", humidityOffsetSetting)
 		getParamInput(lightTriggerParam)
-		getNumberInput("lightOffset", "Light % Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1%)\n(1 = Add 1%)", "-25..25", lightOffsetSetting)
-		getNumberInput("lxLightOffset", "Light Lux Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1 lx)\n(1 = Add 1 lx)", "-25..25", lxLightOffsetSetting)
+		getNumberInput("lightOffset", "Light % Offset [-25 to 25]", "-25..25", lightOffsetSetting)
+		getNumberInput("lxLightOffset", "Light Lux Offset [-25 to 25]", "-25..25", lxLightOffsetSetting)
 		getBoolInput("reportLx", "Report Illuminance as Lux?\n(When enabled, a calculated lux level will be used for illuminance instead of the default %.)", reportLxSetting)
 		getNumberInput("maxLx", "Lux value to report when light level is at 100%:", "0..5000", maxLxSetting)
 		getParamInput(motionTimeParam)
@@ -133,7 +117,7 @@
 		getNumberInput("checkinInterval", "Minimum Check-in Interval [0-167]\n(0 = 10 Minutes [FOR TESTING ONLY])\n(1 = 1 Hour)\n(167 = 7 Days)", "0..167", checkinIntervalSetting)
 		getNumberInput("reportBatteryEvery", "Battery Reporting Interval [1-167]\n(1 = 1 Hour)\n(167 = 7 Days)\nThis setting can't be less than the Minimum Check-in Interval.", "1..67", batteryReportingIntervalSetting)
 		getBoolInput("autoClearTamper", "Automatically Clear Tamper?\n(The tamper detected event is raised when the device is opened.  This setting allows you to decide whether or not to have the clear event automatically raised when the device closes.)", false)
-		getBoolInput("debugOutput", "Enable debug logging?", true)
+		getBoolInput("debugOutput", "Enable Debug Logging?", true)
 	}
 }
 
@@ -453,11 +437,11 @@ private getConfigParams() {
 }
 
 private getTempScaleParam() {
-	return createConfigParamMap(1, "Temperature Scale [0-1]${getNameValueSettingDesc(tempUnits)}", 1, "tempScale", "0..1", (firmwareVersion >= firmwareV2 ? 1 : 0))
+	return createConfigParamMap(1, "Temperature Scale [0,1]${getNameValueSettingDesc(tempUnits)}", 1, "tempScale", "0..1", (firmwareVersion >= firmwareV2 ? 1 : 0))
 }
 
 private getTempTriggerParam() {
-	return createConfigParamMap(2, "Temperature Change Trigger [1-50]\n(1 = 0.1°)\n(50 = 5.0°)", 1, "tempTrigger", "1..50", 10)
+	return createConfigParamMap(2, "Temperature Change Trigger [1-50]\n(1 = 0.1°; 50 = 5.0°)", 1, "tempTrigger", "1..50", 10)
 }
 
 private getHumidityTriggerParam() {
@@ -741,14 +725,14 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv5.SensorMultilevelR
 	switch (cmd.sensorType) {
 		case tempSensorType:
 			def unit = tempUnits.find { it.value == cmd.scale }?.unit
-			def temp = convertTemperatureIfNeeded(cmd.scaledSensorValue, unit, cmd.precision)
+			def temp = convertTemperatureIfNeeded(cmd.scaledSensorValue, unit, 0)
 			eventMaps += createTempEventMaps(temp, false)
 			break		
 		case humiditySensorType:
-			eventMaps += createHumidityEventMaps(cmd.scaledSensorValue, false)
+			eventMaps += createHumidityEventMaps(cmd.scaledSensorValue.round(), false)
 			break		
 		case lightSensorType:
-			eventMaps += createLightEventMaps(cmd.scaledSensorValue, false)
+			eventMaps += createLightEventMaps(cmd.scaledSensorValue.round(), false)
 			break		
 	}
 	
