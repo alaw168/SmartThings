@@ -17,7 +17,7 @@
  */
 
 metadata {
-	definition (name: "GE Motion Dimmer Switch", namespace: "alaw168", author: "Matt LeBaugh") {
+	definition (name: "GE Motion Dimmer Switch", namespace: "alaw168", author: "Alvin Law") {
 		capability "Motion Sensor"
         capability "Actuator"
  		capability "Switch"
