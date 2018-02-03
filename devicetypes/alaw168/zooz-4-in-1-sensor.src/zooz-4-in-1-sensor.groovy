@@ -79,7 +79,7 @@
 		}
 
 		standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action: "refresh", icon: "st.secondary.refresh"
+			state "default", action: "refresh", label: '', icon: "st.secondary.refresh"
 		}
 
 		valueTile("pending", "device.pendingChanges", decoration: "flat", width: 2, height: 1){
@@ -97,7 +97,7 @@
 		}
 		
 		main(["main"])
-		details(["main","temperature","humidity","lxLight","tampering","battery","refresh","firmwareVersion","lastUpdate","pending"])
+		details(["main","temperature","humidity","pLight","tampering","battery","refresh","firmwareVersion","lastUpdate","pending"])
 	}
 	
 	preferences {
