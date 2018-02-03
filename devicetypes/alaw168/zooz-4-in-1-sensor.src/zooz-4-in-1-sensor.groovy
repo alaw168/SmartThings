@@ -79,13 +79,13 @@
 		}
 
 		standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action: "refresh", label: '', icon: "st.secondary.refresh"
+			state "default", action: "refresh", label: "", icon: "st.secondary.refresh"
 		}
 
 		valueTile("pending", "device.pendingChanges", decoration: "flat", width: 2, height: 1){
+			state "0", label: 'Up To Date'
 			state "-1", label:'Updating Settings'
 			state "pendingChanges", label:'${currentValue} Change(s) Pending'
-			state "0", label: 'Up To Date'
 		}
 		
 		valueTile("lastUpdate", "device.lastUpdate", decoration: "flat", inactiveLabel:false, width: 2, height: 1){
