@@ -65,10 +65,10 @@
 				]
 		}
 		valueTile("humidity","device.humidity", width: 2, height: 2) {
-           	state "humidity",label:'${currentValue}%', unit:"", icon:"st.Weather.weather12"
+           	state "humidity",label:'\n${currentValue}%', unit:"", icon:"st.Weather.weather12"
 		}
 		valueTile("pLight","device.pLight", width: 2, height: 2) {
-            state "pLight",label:'${currentValue}%', unit:"", icon:"st.illuminance.illuminance.light"
+            state "pLight",label:'\n${currentValue}%', unit:"", icon:"st.illuminance.illuminance.light"
 		}
 		standardTile("tampering", "device.tamper", width: 2, height: 2) {
 			state("detected", label:'tampered', icon:"st.contact.contact.open", backgroundColor:"#e86d13")

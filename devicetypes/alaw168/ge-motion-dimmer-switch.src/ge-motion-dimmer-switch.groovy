@@ -17,7 +17,7 @@
  */
 
 metadata {
-	definition (name: "GE Motion Dimmer Switch", namespace: "alaw168", author: "Matt LeBaugh") {
+	definition (name: "GE Motion Dimmer Switch", namespace: "alaw168", author: "Alvin Law") {
 		capability "Motion Sensor"
         capability "Actuator"
  		capability "Switch"
@@ -205,10 +205,13 @@ metadata {
 
 	tiles(scale: 2) {
 		multiAttributeTile(name:"switch", type: "lighting", width: 6, height: 4, canChangeIcon: true){
-		tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-			attributeState "on", label: '${name}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#00A0DC"
-			attributeState "off", label: '${name}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff"
-		}
+			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
+				attributeState "on", label: '${name}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#00A0DC"
+				attributeState "off", label: '${name}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff"
+			}
+			tileAttribute("device.operatingMode", key: "SECONDARY_CONTROL") {
+                attributeState "default", label:'${currentValue}'
+			}
 			tileAttribute ("device.level", key: "SLIDER_CONTROL") {
 				attributeState "level", action:"switch level.setLevel"
 			}
@@ -224,7 +227,7 @@ metadata {
 		}
               
 		standardTile("operatingMode", "device.operatingMode", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", label:'Mode toggle: ${currentValue}', unit:"", action:"toggleMode"
+			state "default", label:'${currentValue} mode', unit:"", action:"toggleMode"
 		}
 
 		main(["switch"])
@@ -389,9 +392,9 @@ def zwaveEvent(physicalgraph.zwave.commands.notificationv3.NotificationReport cm
     def cmds = []
 	if (cmd.notificationType == 0x07) {
 		if ((cmd.event == 0x00)) { 
-           	result << createEvent(name: "motion", value: "inactive", descriptionText: "$device.displayName motion has stopped")
+			result << createEvent(name: "motion", value: "inactive", descriptionText: "$device.displayName motion has stopped")
          } else if (cmd.event == 0x08) {
-            result << createEvent(name: "motion", value: "active", descriptionText: "$device.displayName detected motion")	  
+            result << createEvent(name: "motion", value: "active", descriptionText: "$device.displayName detected motion")
         }
     }
 	result  
