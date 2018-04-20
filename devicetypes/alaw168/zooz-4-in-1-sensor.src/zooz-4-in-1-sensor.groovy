@@ -76,6 +76,7 @@ metadata {
 	simulator { }
 	
 	preferences {
+/*
 		input "primaryTileStatus", "enum",
 			title: "Primary Status:",
 			defaultValue: primaryTileStatusSetting,
@@ -88,18 +89,19 @@ metadata {
 			title: "Secondary Status:",
 			defaultValue: secondaryTileStatusSetting,
 			required: false,
-			options: secondaryStatusOptions		
+			options: secondaryStatusOptions
+*/
 
 		getParamInput(tempScaleParam)
 		getParamInput(tempTriggerParam)
-		getDecimalInput("tempOffset", "Temperature Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1°)\n(1 = Add 1°)", "-25..25", tempOffsetSetting)
+		getDecimalInput("tempOffset", "Temperature Offset [-25 to 25]", "-25..25", tempOffsetSetting)
 		getParamInput(humidityTriggerParam)	
-		getDecimalInput("humidityOffset", "Humidity % Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1%)\n(1 = Add 1%)", "-25..25", humidityOffsetSetting)
+		getDecimalInput("humidityOffset", "Humidity % Offset [-25 to 25]", "-25..25", humidityOffsetSetting)
 		getParamInput(lightTriggerParam)
-		getDecimalInput("lightOffset", "Light % Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1%)\n(1 = Add 1%)", "-25..25", lightOffsetSetting)
-		getDecimalInput("lxLightOffset", "Light Lux Offset [-25 to 25]\n(0 = No Offset)\n(-1 = Subtract 1 lx)\n(1 = Add 1 lx)", "-25..25", lxLightOffsetSetting)
-		getBoolInput("reportLx", "Report Illuminance as Lux?\n(When enabled, a calculated lux level will be used for illuminance instead of the default %.)", reportLxSetting)
-		getNumberInput("maxLx", "Lux value to report when light level is at 100%:", "0..5000", maxLxSetting)
+		getDecimalInput("lightOffset", "Light % Offset [-25 to 25]", "-25..25", lightOffsetSetting)
+//		getDecimalInput("lxLightOffset", "Light Lux Offset [-25 to 25]\n(0 = No Offset)", "-25..25", lxLightOffsetSetting)
+//		getBoolInput("reportLx", "Report Illuminance as Lux?\n(When enabled, a calculated lux level will be used for illuminance instead of the default %.)", reportLxSetting)
+//		getNumberInput("maxLx", "Lux value to report when light level is at 100%:", "0..5000", maxLxSetting)
 		getParamInput(motionTimeParam)
 		getParamInput(motionSensitivityParam)
 		getParamInput(ledIndicatorModeParam)
@@ -112,89 +114,67 @@ metadata {
 
 	tiles(scale: 2) {
 		multiAttributeTile(name:"mainTile", type: "generic", width: 6, height: 4){
-			tileAttribute ("device.primaryStatus", key: "PRIMARY_CONTROL") {
-				attributeState "primaryStatus", 
-					label:'${currentValue}', 
-					icon:"${resourcesUrl}motion-inactive.png",
-					backgroundColor:"#ffffff"			
-				attributeState "No Motion", 
-					label:'NO MOTION', 
-					icon:"${resourcesUrl}motion-inactive.png", 
-					backgroundColor:"#ffffff"
-				attributeState "Motion", 
-					label:'MOTION', 
-					icon:"st.motion.motion.active", 
-					backgroundColor:"#00a0dc"
-			}
-			tileAttribute ("device.secondaryStatus", key: "SECONDARY_CONTROL") {
-				attributeState "default", label:'${currentValue}'
-				attributeState "inactive", label:'NO MOTION'
-				attributeState "active", label:'MOTION'
+			tileAttribute ("device.motion", key: "PRIMARY_CONTROL") {
+				attributeState "active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#00a0dc"
+				attributeState "inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#cccccc"
 			}
 		}
 		
 		valueTile("temperature", "device.temperature", width: 2, height: 2) {
-			state "temperature", label:'${currentValue}°',
-			icon: "${resourcesUrl}temperature.png"
+          	state "temperature", label:'${currentValue}°', unit:"${unit}", backgroundColors:[
+               	[value: 32, color: "#153591"],
+                [value: 44, color: "#1e9cbb"],
+                [value: 59, color: "#90d2a7"],
+				[value: 74, color: "#44b621"],
+				[value: 84, color: "#f1d801"],
+				[value: 92, color: "#d04e00"],
+				[value: 98, color: "#bc2323"]
+			]
 		}
 		
 		valueTile("humidity", "device.humidity", width: 2, height: 2){
-			state "humidity", label:'${currentValue}%', icon: "${resourcesUrl}humidity.png"
+			state "humidity", label:'\n${currentValue}%', icon:"st.Weather.weather12"
 		}
 		
 		valueTile("pLight", "device.pLight", width: 2, height: 2){
-			state "pLight", label:'${currentValue}%', icon: "${resourcesUrl}light.png"
+			state "pLight", label:'\n${currentValue}%', icon:"st.illuminance.illuminance.light"
 		}
 
-		valueTile("lxLight", "device.lxLight", width: 2, height: 2){
-			state "default", label:'${currentValue}lx', icon: "${resourcesUrl}light.png"
-		}
-		
-		standardTile("motion", "device.motion", width: 2, height: 2){		
-			state "inactive", label:'No Motion', icon: "${resourcesUrl}motion-inactive.png"
-			state "active", label:'Motion', icon: "${resourcesUrl}motion-active.png"
-		}			
-		
-		standardTile("tampering", "device.tamper", decoration: "flat", width: 2, height: 2) {			
-			state "clear", label:'No Tamper', icon: "${resourcesUrl}tamper-clear.png"
-			state "detected", label:'Tamper', icon: "${resourcesUrl}tamper-detected.png", action: "clearTamper"
+		standardTile("tampering", "device.tamper", decoration:"flat", width: 2, height: 2) {			
+			state("detected", label:'tampered', icon:"st.contact.contact.open", backgroundColor:"#e86d13")
+			state("clear", label:'ok', icon:"st.contact.contact.closed", backgroundColor:"#cccccc")
 		}
 		
 		valueTile("battery", "device.battery", width: 2, height: 2){
-			state "default", label:'${currentValue}%', icon: "${resourcesUrl}battery.png"
-			state "1", label:'${currentValue}%', icon: "${resourcesUrl}battery-low.png"
+			state "battery", label:'\n${currentValue}%', icon: "st.arlo.sensor_battery_4"
+			state "1", label:'${currentValue}%', icon: "st.arlo.sensor_battery_0"
 		}
-			
 		
-		valueTile("pending", "device.pendingChanges", decoration: "flat", width: 2, height: 2){
+		valueTile("pending", "device.pendingChanges", decoration: "flat", width: 3, height: 1){
 			state "pendingChanges", label:'${currentValue} Change(s) Pending'
 			state "0", label: 'No Pending Changes'
 			state "-1", label:'Updating Settings'
 		}
 		
-		valueTile("lastUpdate", "device.lastUpdate", decoration: "flat", width: 2, height: 2){
-			state "lastUpdate", label:'Settings\nUpdated\n\n${currentValue}'
+		valueTile("lastUpdate", "device.lastUpdate", decoration: "flat", width: 3, height: 1){
+			state "lastUpdate", label:'Settings Updated\n${currentValue}'
 		}
 		
-		valueTile("lastActivity", "device.lastCheckin", decoration: "flat", width: 2, height: 2){
-			state "lastCheckin", label:'Last\nActivity\n\n${currentValue}'
+		valueTile("lastActivity", "device.lastCheckin", decoration: "flat", width: 3, height: 1){
+			state "lastCheckin", label:'Last Activity\n${currentValue}'
 		}
 		
-		valueTile("firmwareVersion", "device.firmwareVersion", decoration: "flat", width: 2, height: 2){
-			state "firmwareVersion", label:'Firmware \n${currentValue}'
+		valueTile("firmwareVersion", "device.firmwareVersion", decoration: "flat", width: 3, height: 1){
+			state "firmwareVersion", label:'Firmware\n${currentValue}'
 		}
 		
 		standardTile("refresh", "device.refresh", width: 2, height: 2, decoration: "flat") {
-			state "default", label: "Refresh", action: "refresh", icon:"${resourcesUrl}refresh.png"
+			state "default", action: "refresh", icon:"st.secondary.refresh"
 		}
-		
-		main("mainTile")
-		details(["mainTile", "humidity", "temperature", "lxLight", "battery", "motion", "pLight", "refresh","pending", "tampering", "firmwareVersion", "lastActivity", "lastUpdate"])
-	}
-}
 
-private getResourcesUrl() {
-	return "https://raw.githubusercontent.com/krlaframboise/Resources/master/Zooz/"
+		main("mainTile")
+		details(["mainTile","temperature","humidity","pLight","tampering","battery","refresh","firmwareVersion","pending","lastActivity","lastUpdate"])
+	}
 }
 
 private getNumberInput(name, title, range, defaultVal) {	
@@ -555,7 +535,8 @@ private getLightTriggerParam() {
 }
 
 private getMotionTimeParam() {	
-	return createConfigParamMap(5, "Motion Retrigger Time [1-255 or 15-60]\n(1 Minute - 255 Minutes [FIRMWARE ${firmwareV1} & ${firmwareV2}])\n(15 Seconds - 60 Seconds [FIRMWARE ${firmwareV3}])", 1, "motionTime", "1..255", 15)
+//	return createConfigParamMap(5, "Motion Retrigger Time [1-255 or 15-60]\n(1 Minute - 255 Minutes [FIRMWARE ${firmwareV1} & ${firmwareV2}])\n(15 Seconds - 60 Seconds [FIRMWARE ${firmwareV3}])", 1, "motionTime", "1..255", 15)
+	return createConfigParamMap(5, "Motion Retrigger Time [15-60](15s - 60s)", 1, "motionTime", "15..60", 15)
 }
 
 private getMotionSensitivityParam() {
@@ -978,18 +959,18 @@ private getAttrStatusText(attrName, eventMaps=null) {
 private getDescriptionText(data) {
 	switch (data?.name ?: "") {
 		case "motion":
-			return "${data.value}" == "active" ? "Motion" : "No Motion"
+			return "${data.value}" == "active" ? "Detected Motion" : "Motion Has Stopped"
 			break
 		case "temperature":
 			return "${data.value}°${data.unit}"					
 			break
 		case "humidity":
-			return  "${data.value}% RH"
+			return  "Humidity ${data.value}%"
 			break
 		case "lxLight":
-			return "${data.value} LUX"
+			return "Illuminance ${data.value} Lx"
 		case "pLight":
-			return "${data.value}% LIGHT"
+			return "Illiminance ${data.value}%"
 			break
 		default:
 			return ""
