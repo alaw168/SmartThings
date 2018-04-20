@@ -14,7 +14,7 @@
  */
  
  metadata {
-	definition (name: "zooZ 4-in-1 Sensor (RV)", namespace: "alaw168", author: "Alvin Law") {
+	definition (name: "zooZ 4-in-1 Sensor", namespace: "alaw168", author: "Alvin Law") {
 		capability "Motion Sensor"
 		capability "Tamper Alert"
 		capability "Temperature Measurement"
@@ -25,7 +25,7 @@
 		capability "Battery"
 		
         // RAW Description: 0 0 0x0701 0 0 0 e 0x5E 0x98 0x86 0x72 0x5A 0x85 0x59 0x73 0x80 0x71 0x31 0x70 0x84 0x7A   										 
-		attribute "tamper", "enum", ["detected", "clear"]
+		attribute "tamper", "enum", ["active", "inactive"]
 		fingerprint deviceId: "0x0701", inClusters: "0x5E,0x86,0x72,0x59,0x85,0x73,0x71,0x84,0x80,0x31,0x70,0x5A,0x98,0x7A"
 		}
 simulator {
@@ -82,7 +82,7 @@ simulator {
 			}
 		}
 		valueTile("temperature","device.temperature", width: 2, height: 2) {
-            	state "temperature", label:'${currentValue}°', unit:"${unit}", backgroundColors:[
+            	state "temperature", label:'${currentValue}°', unit:"${unit}", /*icon:"st.Weather.weather2",*/ backgroundColors:[
                 	[value: 32, color: "#153591"],
                     [value: 44, color: "#1e9cbb"],
                     [value: 59, color: "#90d2a7"],
@@ -112,6 +112,8 @@ simulator {
 		standardTile("tampering", "device.tamper", width: 2, height: 2) {
 			state("tamper", label:'tampered', icon:"st.contact.contact.open", backgroundColor:"#e86d13")
 			state("clear", label:'ok', icon:"st.contact.contact.closed", backgroundColor:"#cccccc")
+			state("active", label:'tampered', icon:"st.contact.contact.open", backgroundColor:"#e86d13")
+			state("inactive", label:'ok', icon:"st.contact.contact.closed", backgroundColor:"#cccccc")
 		}
 		valueTile("battery", "device.battery", decoration: "flat", width: 2, height: 2) {
 			state "battery", label:'${currentValue}% battery'
@@ -470,9 +472,9 @@ private commands(commands, delay=1000) {
 }
 
 def refresh() {	
-	if (device.currentValue("tamper") != "clear") {
+	if (device.currentValue("tamper") != "inactive") {
 		logDebug "Clearing Tamper"
-		sendEvent(createTamperEventMap("clear"))
+		sendEvent(createTamperEventMap("inactive"))
 	}
 	else if (state.pendingRefresh) {	
 		sendEvent(createEventMap("pendingChanges", configParams.size(), "", false))			
@@ -485,3 +487,4 @@ def refresh() {
 	}
 	return []
 }
+
