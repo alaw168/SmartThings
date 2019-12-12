@@ -1,5 +1,5 @@
 /**
- *  Zooz 4-in-1 Sensor v2.0.5
+ *  Zooz 4-in-1 Sensor v2.1
  *		(Model: ZSE40)
  *
  *  Author: 
@@ -10,8 +10,11 @@
  *
  *  Changelog:
  *
- *    2.0.5a (10/23/2018)
+ *    2.1a (12/12/2019)
  *      - customized tile design to my own liking
+ *
+ *    2.1 (02/20/2019)
+ *    	- Changed illuminance and humidity to whole numbers because decimal values for those attributes completely crash the new mobile app.
  *
  *    2.0.5 (10/10/2018)
  *    	- Fixed issue causing problems with inclusion process
@@ -147,8 +150,8 @@ metadata {
 		valueTile("temperature", "device.temperature", width: 2, height: 2) {
 			state "temperature", label:'${currentValue}°', unit:"${unit}",
 			backgroundColors:[
-               			[value: 32, color: "#153591"],
-		                [value: 44, color: "#1e9cbb"],
+               	[value: 32, color: "#153591"],
+		        [value: 44, color: "#1e9cbb"],
 				[value: 59, color: "#90d2a7"],
 				[value: 74, color: "#44b621"],
 				[value: 84, color: "#f1d801"],
@@ -166,12 +169,17 @@ metadata {
 		}
 
 		valueTile("lxLight", "device.lxLight", width: 2, height: 2){
-			state "default", label:'\n${currentValue} lx', icon: "st.illuminance.illuminance.light"
+			state "default", label:'\n${currentValue}lx', icon: "st.illuminance.illuminance.light"
 		}
+		
+		standardTile("motion", "device.motion", width: 2, height: 2){		
+			state "inactive", label:'No Motion', icon: "${resourcesUrl}motion-inactive.png"
+			state "active", label:'Motion', icon: "${resourcesUrl}motion-active.png"
+		}			
 		
 		standardTile("tampering", "device.tamper", decoration: "flat", width: 2, height: 2) {			
 			state "clear", label:'ok', icon: "st.contact.contact.closed", backgroundColor:"#cccccc"
-			state "detected", label:'tampered', icon: "st.contact.contact.open", backgroundColor:"#e86d13", action: "clearTamper"
+			state "detected", label:'open', icon: "st.contact.contact.open", backgroundColor:"#e86d13", action: "clearTamper"
 		}
 		
 		standardTile("battery", "device.battery", width: 2, height: 2){
@@ -186,7 +194,7 @@ metadata {
 			state "20", label:'${currentValue}%', icon: "st.arlo.sensor_battery_1"
 			state "10", label:'${currentValue}%', icon: "st.arlo.sensor_battery_0"
 			state "1", label:'${currentValue}%', icon: "st.arlo.sensor_battery_0"
-		}			
+		}
 		
 		valueTile("pending", "device.pendingChanges", decoration: "flat", width: 3, height: 1){
 			state "pendingChanges", label:'${currentValue} Change(s) Pending'
@@ -211,7 +219,7 @@ metadata {
 		standardTile("refresh", "device.refresh", width: 2, height: 2, decoration: "flat") {
 			state "default", action: "refresh", icon:"st.secondary.refresh"
 		}
-
+		
 		main("mainTile")
 		details(["mainTile", "temperature", "humidity", "pLight", "tampering", "battery", "refresh", "pending", "firmwareVersion", "lastActivity", "lastUpdate"])
 	}
@@ -582,7 +590,7 @@ private getLightTriggerParam() {
 }
 
 private getMotionTimeParam() {	
-	return createConfigParamMap(5, "Motion Retrigger Time [15-60] (15s - 60s)", 1, "motionTime", "15..60", 15)
+	return createConfigParamMap(5, "Motion Retrigger Time [1-255 or 15-60]\n(1 Minute - 255 Minutes [FIRMWARE ${firmwareV1} & ${firmwareV2}])\n(15 Seconds - 60 Seconds [FIRMWARE ${firmwareV3}])", 1, "motionTime", "1..255", 15)
 }
 
 private getMotionSensitivityParam() {
@@ -898,14 +906,14 @@ private createTempEventMaps(val, onlyIfNew) {
 private createHumidityEventMaps(val, onlyIfNew) {
 	state.actualHumidity = val
 	def offsetVal = applyOffset(val, humidityOffsetSetting, "Humidity", "%")
-	return createEventMaps("humidity", offsetVal, "%", true, onlyIfNew)
+	return createEventMaps("humidity", Math.round(offsetVal), "%", true, onlyIfNew)
 }
 
 private createLightEventMaps(val, onlyIfNew) {
 	state.actualLight = val
 	def pOffsetVal = applyOffset(val, lightOffsetSetting, "Light", "%")
 	def lxOffsetVal = (val == 100) ? maxLxSetting : applyOffset(calculateLxVal(val), lxLightOffsetSetting, "Light", "lx")
-	def lightOffsetVal = reportLxSetting ? lxOffsetVal : pOffsetVal
+	def lightOffsetVal = reportLxSetting ? Math.round(lxOffsetVal) : Math.round(pOffsetVal)
 	def lightUnit = reportLxSetting ? "lx" : "%"
 	
 	def result = []
